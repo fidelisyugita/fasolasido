@@ -24,9 +24,10 @@ export async function modify(
   lastOrderNo = "",
   percentage = 50
 ) {
-  // if(!lastOrderNo) lastOrderNo = ""
-  // if(!percentage) percentage = 50
-  // console.log("lastOrderNo: ", lastOrderNo);
+  if (!lastOrderNo) lastOrderNo = "";
+  if (!percentage) percentage = 50;
+  console.log("lastOrderNo: ", lastOrderNo);
+  console.log("percentage: ", percentage);
   const workbook = new Excel.Workbook();
 
   const encoded = base64.replace(/^data:\w+\/\w+;base64,/, "");
