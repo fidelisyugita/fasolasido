@@ -7,11 +7,12 @@ export function addDay(date: string, amount = 1, format = "YYMMDD") {
   return moment(date, format).add(amount, "day").format(format);
 }
 
-export function getBase64(filePath: any, callback: any) {
+export function transformBody(body: any, callback: any) {
   const reader = new FileReader();
-  reader.readAsDataURL(filePath);
+  reader.readAsDataURL(body.excelBase64);
   reader.onload = function () {
-    callback(reader.result);
+    const newBody = { ...body, excelBase64: reader.result };
+    callback(newBody);
   };
   reader.onerror = function (error) {
     throw error;
@@ -25,7 +26,7 @@ export async function modify(
 ) {
   // if(!lastOrderNo) lastOrderNo = ""
   // if(!percentage) percentage = 50
-  // console.log("base64: ", base64);
+  // console.log("lastOrderNo: ", lastOrderNo);
   const workbook = new Excel.Workbook();
 
   const encoded = base64.replace(/^data:\w+\/\w+;base64,/, "");

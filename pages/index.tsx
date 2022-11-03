@@ -3,8 +3,8 @@ import axios from "axios";
 
 import Layout from "components/Layout";
 import Form from "components/Form";
-import fetchJson, { FetchError } from "lib/fetchJson";
-import { getBase64 } from "lib/utils";
+import { FetchError } from "lib/fetchJson";
+import { transformBody } from "lib/utils";
 
 // Make sure to check https://nextjs.org/docs/basic-features/layouts for more info on how to use layouts
 export default function Home() {
@@ -20,52 +20,48 @@ export default function Home() {
             setErrorMsg("");
 
             // console.log(event.currentTarget["file-input"].files[0]);
+
+            const body = {
+              excelBase64: event.currentTarget["file-input"].files[0],
+              percentage: event.currentTarget?.percentage?.value,
+              lastOrderNo: event.currentTarget?.lastOrderNo?.value,
+            };
+
             try {
-              getBase64(
-                event.currentTarget["file-input"].files[0],
-                async (base64File: any) => {
-                  // console.log("base64File: ", base64File);
+              transformBody(body, async (reqBody: any) => {
+                // console.log("reqBody: ", reqBody);
 
-                  const body = {
-                    excelBase64: base64File,
-                    percentage: event.currentTarget?.percentage?.value,
-                    lastOrderNo: event.currentTarget?.lastOrderNo?.value,
-                  };
+                const res = await axios.post("/api/excel", reqBody, {
+                  responseType: "arraybuffer",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Accept:
+                      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                  },
+                });
+                // console.log("res: ", res);
 
-                  // console.log("body: ", JSON.stringify(body));
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", "file.xlsx"); //or any other extension
+                document.body.appendChild(link);
+                link.click();
 
-                  const res = await axios.post("/api/excel", body, {
-                    responseType: "arraybuffer",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Accept:
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    },
-                  });
-                  console.log("res: ", res);
-
-                  const url = window.URL.createObjectURL(new Blob([res.data]));
-                  const link = document.createElement("a");
-                  link.href = url;
-                  link.setAttribute("download", "file.xlsx"); //or any other extension
-                  document.body.appendChild(link);
-                  link.click();
-
-                  // return await axios.post(
-                  //   "https://asia-southeast2-fasolasidon.cloudfunctions.net/excel/generate",
-                  //   {
-                  //     method: "POST",
-                  //     responseType: "arraybuffer",
-                  //     headers: {
-                  //       "Content-Type": "application/json",
-                  //       Accept:
-                  //         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                  //     },
-                  //     body: JSON.stringify(body),
-                  //   }
-                  // );
-                }
-              );
+                // return await axios.post(
+                //   "https://asia-southeast2-fasolasidon.cloudfunctions.net/excel/generate",
+                //   {
+                //     method: "POST",
+                //     responseType: "arraybuffer",
+                //     headers: {
+                //       "Content-Type": "application/json",
+                //       Accept:
+                //         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                //     },
+                //     body: JSON.stringify(body),
+                //   }
+                // );
+              });
             } catch (error) {
               if (error instanceof FetchError) {
                 setErrorMsg(error.data.message);
