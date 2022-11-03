@@ -2,6 +2,11 @@ import Excel from "exceljs";
 import { isNil, isEmpty } from "ramda";
 import moment from "moment";
 
+const CASH = "CASH";
+const QR = "QR";
+const DEBIT = "Kartu Debit";
+const GOFOOD = "GoFOOD";
+
 export function addDay(date: string, amount = 1, format = "YYMMDD") {
   if (isNil(date) || isEmpty(date)) return null;
   return moment(date, format).add(amount, "day").format(format);
@@ -28,6 +33,7 @@ export async function modify(
   if (!percentage) percentage = 50;
   console.log("lastOrderNo: ", lastOrderNo);
   console.log("percentage: ", percentage);
+
   const workbook = new Excel.Workbook();
 
   const encoded = base64.replace(/^data:\w+\/\w+;base64,/, "");
@@ -70,26 +76,60 @@ export async function modify(
       removeEvery = parseInt(String(percentage / (100 - percentage)));
     }
 
-    /**
-     * modify order no & remove unnecessary row
-     */
+    let cash = 0;
+    let qrPayment = 0;
+    let debitCard = 0;
+    let gofood = 0;
     let rowCount = worksheet.actualRowCount;
     let i = 1;
     while (i < rowCount) {
-      const row = worksheet.getRow(i + 1); // first row after header
       const prevRow = worksheet.getRow(i);
+      const row = worksheet.getRow(i + 1);
       if (row.getCell(2).value != prevRow.getCell(2).value) {
+        // compare order time
         suffixOrderNo += 1;
       }
-      row.getCell(1).value = `${prefixOrderNo}${suffixOrderNo}`;
-      // console.log("suffixOrderNo: ", suffixOrderNo);
+      row.getCell(1).value = `${prefixOrderNo}${suffixOrderNo}`; // modify order no
       row.commit();
+
+      // count by payment type
+      switch (String(row.getCell(8))) {
+        case QR:
+          qrPayment += Number(row.getCell(7));
+          break;
+        case GOFOOD:
+          gofood += Number(row.getCell(7));
+          break;
+        case DEBIT:
+          debitCard += Number(row.getCell(7));
+          break;
+        default:
+          cash += Number(row.getCell(7));
+          break;
+      }
+
+      // remove unnecessary row
       if (i % removeEvery == 0) {
         worksheet.spliceRows(i + 2, removeCount);
         rowCount -= removeCount;
       }
       i += 1;
     }
+
+    // input total & label
+    worksheet.getCell(`A${rowCount + 5}`).value = CASH;
+    worksheet.getCell(`A${rowCount + 6}`).value = QR;
+    worksheet.getCell(`A${rowCount + 7}`).value = DEBIT;
+    worksheet.getCell(`A${rowCount + 8}`).value = GOFOOD;
+    worksheet.getCell(`A${rowCount + 9}`).value = "TOTAL";
+    worksheet.getCell(`B${rowCount + 5}`).value = `Rp ${cash}`;
+    worksheet.getCell(`B${rowCount + 6}`).value = `Rp ${qrPayment}`;
+    worksheet.getCell(`B${rowCount + 7}`).value = `Rp ${debitCard}`;
+    worksheet.getCell(`B${rowCount + 8}`).value = `Rp ${gofood}`;
+    worksheet.getCell(`B${rowCount + 9}`).value = `Rp ${
+      cash + qrPayment + debitCard + gofood
+    }`;
+
     return workbook.xlsx.writeBuffer();
   } catch (error) {
     console.log("error: ", error);
