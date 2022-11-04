@@ -1,16 +1,21 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { withIronSessionSsr } from "iron-session/next";
+
+import { sessionOptions } from "lib/session";
+import { User } from "pages/api/user";
 
 import Layout from "components/Layout";
 import Form from "components/Form";
-import useUser from "lib/useUser";
 import { FetchError } from "lib/fetchJson";
 import { transformBody } from "lib/utils";
 
-// Make sure to check https://nextjs.org/docs/basic-features/layouts for more info on how to use layouts
-export default function Home() {
-  useUser({ redirectTo: "/login" });
+import { InferGetServerSidePropsType } from "next";
 
+// Make sure to check https://nextjs.org/docs/basic-features/layouts for more info on how to use layouts
+export default function Home({
+  user,
+}: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
@@ -78,3 +83,26 @@ export default function Home() {
     </Layout>
   );
 }
+
+export const getServerSideProps = withIronSessionSsr(async function ({
+  req,
+  res,
+}) {
+  const user = req.session.user;
+
+  if (user === undefined) {
+    res.setHeader("location", "/login");
+    res.statusCode = 302;
+    res.end();
+    return {
+      props: {
+        user: { isLoggedIn: false, accessToken: "", id: "" } as User,
+      },
+    };
+  }
+
+  return {
+    props: { user: req.session.user },
+  };
+},
+sessionOptions);
