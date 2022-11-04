@@ -24,7 +24,7 @@ export default function Home() {
             const body = {
               excelBase64: event.currentTarget["file-input"].files[0],
               percentage: event.currentTarget?.percentage?.value,
-              lastOrderNo: event.currentTarget?.lastOrderNo?.value,
+              // lastOrderNo: event.currentTarget?.lastOrderNo?.value,
             };
 
             try {
