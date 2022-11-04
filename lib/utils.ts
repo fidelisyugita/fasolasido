@@ -12,6 +12,12 @@ export function addDay(date: string, amount = 1, format = "YYMMDD") {
   return moment(date, format).add(amount, "day").format(format);
 }
 
+export function moneyFormat(value = 0) {
+  if (!value) return;
+  const formattedMoney = value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,");
+  return `Rp ${formattedMoney.split(".")[0]}`;
+}
+
 export function getDateFromOrderNo(orderNo: string, format = "YYMMDD") {
   const orderDate = orderNo?.slice(4, 10);
   if (orderDate) return orderDate;
@@ -94,13 +100,15 @@ export async function modify(base64: string, percentage = 50) {
           newWorksheet.getCell(`A${lastRow + 7}`).value = DEBIT;
           newWorksheet.getCell(`A${lastRow + 8}`).value = GOFOOD;
           newWorksheet.getCell(`A${lastRow + 9}`).value = "TOTAL";
-          newWorksheet.getCell(`B${lastRow + 5}`).value = `Rp ${cash}`;
-          newWorksheet.getCell(`B${lastRow + 6}`).value = `Rp ${qrPayment}`;
-          newWorksheet.getCell(`B${lastRow + 7}`).value = `Rp ${debitCard}`;
-          newWorksheet.getCell(`B${lastRow + 8}`).value = `Rp ${gofood}`;
-          newWorksheet.getCell(`B${lastRow + 9}`).value = `Rp ${
+          newWorksheet.getCell(`B${lastRow + 5}`).value = moneyFormat(cash);
+          newWorksheet.getCell(`B${lastRow + 6}`).value =
+            moneyFormat(qrPayment);
+          newWorksheet.getCell(`B${lastRow + 7}`).value =
+            moneyFormat(debitCard);
+          newWorksheet.getCell(`B${lastRow + 8}`).value = moneyFormat(gofood);
+          newWorksheet.getCell(`B${lastRow + 9}`).value = moneyFormat(
             cash + qrPayment + debitCard + gofood
-          }`;
+          );
           cash = 0;
           qrPayment = 0;
           debitCard = 0;
@@ -127,24 +135,24 @@ export async function modify(base64: string, percentage = 50) {
       anotherRow.getCell(3).value = row.getCell(3).value;
       anotherRow.getCell(4).value = row.getCell(4).value;
       anotherRow.getCell(5).value = row.getCell(5).value;
-      anotherRow.getCell(6).value = row.getCell(6).value;
-      anotherRow.getCell(7).value = row.getCell(7).value;
+      anotherRow.getCell(6).value = moneyFormat(row.getCell(6).value);
+      anotherRow.getCell(7).value = moneyFormat(row.getCell(7).value);
       anotherRow.getCell(8).value = row.getCell(8).value;
       anotherRow.commit();
 
       // count by payment type
       switch (String(row.getCell(8))) {
         case QR:
-          qrPayment += Number(anotherRow.getCell(7));
+          qrPayment += Number(row.getCell(7));
           break;
         case GOFOOD:
-          gofood += Number(anotherRow.getCell(7));
+          gofood += Number(row.getCell(7));
           break;
         case DEBIT:
-          debitCard += Number(anotherRow.getCell(7));
+          debitCard += Number(row.getCell(7));
           break;
         default:
-          cash += Number(anotherRow.getCell(7));
+          cash += Number(row.getCell(7));
           break;
       }
 
@@ -165,13 +173,13 @@ export async function modify(base64: string, percentage = 50) {
       newWorksheet.getCell(`A${lastRow + 7}`).value = DEBIT;
       newWorksheet.getCell(`A${lastRow + 8}`).value = GOFOOD;
       newWorksheet.getCell(`A${lastRow + 9}`).value = "TOTAL";
-      newWorksheet.getCell(`B${lastRow + 5}`).value = `Rp ${cash}`;
-      newWorksheet.getCell(`B${lastRow + 6}`).value = `Rp ${qrPayment}`;
-      newWorksheet.getCell(`B${lastRow + 7}`).value = `Rp ${debitCard}`;
-      newWorksheet.getCell(`B${lastRow + 8}`).value = `Rp ${gofood}`;
-      newWorksheet.getCell(`B${lastRow + 9}`).value = `Rp ${
+      newWorksheet.getCell(`B${lastRow + 5}`).value = moneyFormat(cash);
+      newWorksheet.getCell(`B${lastRow + 6}`).value = moneyFormat(qrPayment);
+      newWorksheet.getCell(`B${lastRow + 7}`).value = moneyFormat(debitCard);
+      newWorksheet.getCell(`B${lastRow + 8}`).value = moneyFormat(gofood);
+      newWorksheet.getCell(`B${lastRow + 9}`).value = moneyFormat(
         cash + qrPayment + debitCard + gofood
-      }`;
+      );
     }
 
     return workbook.xlsx.writeBuffer();
