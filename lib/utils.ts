@@ -26,8 +26,6 @@ export function getDateFromOrderNo(orderNo: string, format = "YYMMDD") {
 }
 
 export function getHeader(date: string, format = "ddd_YYMMDD") {
-  console.log("date: ", date);
-
   if (isNil(date) || isEmpty(date)) null;
   return `KOHVI_BELITUNG_${moment(date, "YYMMDD").format(format)}`;
 }

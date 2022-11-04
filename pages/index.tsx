@@ -3,11 +3,14 @@ import axios from "axios";
 
 import Layout from "components/Layout";
 import Form from "components/Form";
+import useUser from "lib/useUser";
 import { FetchError } from "lib/fetchJson";
 import { transformBody } from "lib/utils";
 
 // Make sure to check https://nextjs.org/docs/basic-features/layouts for more info on how to use layouts
 export default function Home() {
+  useUser({ redirectTo: "/login" });
+
   const [errorMsg, setErrorMsg] = useState("");
 
   return (
