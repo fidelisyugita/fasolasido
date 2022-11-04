@@ -12,6 +12,12 @@ export function addDay(date: string, amount = 1, format = "YYMMDD") {
   return moment(date, format).add(amount, "day").format(format);
 }
 
+export function getDateFromOrderNo(orderNo: string, format = "YYMMDD") {
+  const orderDate = orderNo?.slice(4, 10);
+  if (orderDate) return orderDate;
+  return moment().format(format);
+}
+
 export function transformBody(body: any, callback: any) {
   const reader = new FileReader();
   reader.readAsDataURL(body.excelBase64);
@@ -24,14 +30,8 @@ export function transformBody(body: any, callback: any) {
   };
 }
 
-export async function modify(
-  base64: string,
-  lastOrderNo = "",
-  percentage = 50
-) {
-  if (!lastOrderNo) lastOrderNo = "";
+export async function modify(base64: string, percentage = 50) {
   if (!percentage) percentage = 50;
-  console.log("lastOrderNo: ", lastOrderNo);
   console.log("percentage: ", percentage);
 
   const workbook = new Excel.Workbook();
@@ -42,15 +42,6 @@ export async function modify(
   try {
     await workbook.xlsx.load(fileBuffer);
     const worksheet = workbook.worksheets[0];
-
-    let orderDate = addDay(lastOrderNo?.slice(4, 10));
-    if (isNil(lastOrderNo) || isEmpty(lastOrderNo)) {
-      lastOrderNo = String(worksheet.getRow(2).getCell(1).value);
-      orderDate = lastOrderNo?.slice(4, 10) || "";
-    }
-    const prefixOrderNo = `${lastOrderNo?.slice(0, 4)}${orderDate}`;
-    let suffixOrderNo = Number(lastOrderNo?.slice(10, 18) || "00000000");
-    // console.log("prefixOrderNo: ", prefixOrderNo);
 
     /**
      * remove unnecessary column
@@ -76,35 +67,84 @@ export async function modify(
       removeEvery = parseInt(String(percentage / (100 - percentage)));
     }
 
+    let seqOrderNo = 0;
+    let newWorksheet;
+
     let cash = 0;
     let qrPayment = 0;
     let debitCard = 0;
     let gofood = 0;
     let rowCount = worksheet.actualRowCount;
     let i = 1;
+    let sheetCounter = 8; // first cell in sheet
     while (i < rowCount) {
       const prevRow = worksheet.getRow(i);
       const row = worksheet.getRow(i + 1);
-      if (row.getCell(2).value != prevRow.getCell(2).value) {
-        // compare order time
-        suffixOrderNo += 1;
+
+      const prevOrderNo = String(prevRow.getCell(1).value);
+      const orderNo = String(row.getCell(1).value);
+      const orderDate = getDateFromOrderNo(orderNo);
+
+      if (!newWorksheet || orderDate != getDateFromOrderNo(prevOrderNo)) {
+        if (newWorksheet) {
+          const lastRow = newWorksheet.actualRowCount + 4;
+          // input total & label
+          newWorksheet.getCell(`A${lastRow + 5}`).value = CASH;
+          newWorksheet.getCell(`A${lastRow + 6}`).value = QR;
+          newWorksheet.getCell(`A${lastRow + 7}`).value = DEBIT;
+          newWorksheet.getCell(`A${lastRow + 8}`).value = GOFOOD;
+          newWorksheet.getCell(`A${lastRow + 9}`).value = "TOTAL";
+          newWorksheet.getCell(`B${lastRow + 5}`).value = `Rp ${cash}`;
+          newWorksheet.getCell(`B${lastRow + 6}`).value = `Rp ${qrPayment}`;
+          newWorksheet.getCell(`B${lastRow + 7}`).value = `Rp ${debitCard}`;
+          newWorksheet.getCell(`B${lastRow + 8}`).value = `Rp ${gofood}`;
+          newWorksheet.getCell(`B${lastRow + 9}`).value = `Rp ${
+            cash + qrPayment + debitCard + gofood
+          }`;
+          cash = 0;
+          qrPayment = 0;
+          debitCard = 0;
+          gofood = 0;
+        }
+
+        newWorksheet = workbook.addWorksheet(getDateFromOrderNo(orderNo)); // set new sheet
+        sheetCounter = 6; // first cell in sheet
       }
+      const anotherRow = newWorksheet?.getRow(sheetCounter);
+
+      const prefixOrderNo = `${orderNo?.slice(0, 4)}${orderDate}`;
+      // compare order time
+      if (row.getCell(2).value != prevRow.getCell(2).value) {
+        seqOrderNo += 1;
+      }
+      const suffixOrderNo = String(seqOrderNo).padStart(8, "0");
+
       row.getCell(1).value = `${prefixOrderNo}${suffixOrderNo}`; // modify order no
       row.commit();
+
+      anotherRow.getCell(1).value = row.getCell(1).value;
+      anotherRow.getCell(2).value = row.getCell(2).value;
+      anotherRow.getCell(3).value = row.getCell(3).value;
+      anotherRow.getCell(4).value = row.getCell(4).value;
+      anotherRow.getCell(5).value = row.getCell(5).value;
+      anotherRow.getCell(6).value = row.getCell(6).value;
+      anotherRow.getCell(7).value = row.getCell(7).value;
+      anotherRow.getCell(8).value = row.getCell(8).value;
+      anotherRow.commit();
 
       // count by payment type
       switch (String(row.getCell(8))) {
         case QR:
-          qrPayment += Number(row.getCell(7));
+          qrPayment += Number(anotherRow.getCell(7));
           break;
         case GOFOOD:
-          gofood += Number(row.getCell(7));
+          gofood += Number(anotherRow.getCell(7));
           break;
         case DEBIT:
-          debitCard += Number(row.getCell(7));
+          debitCard += Number(anotherRow.getCell(7));
           break;
         default:
-          cash += Number(row.getCell(7));
+          cash += Number(anotherRow.getCell(7));
           break;
       }
 
@@ -114,21 +154,25 @@ export async function modify(
         rowCount -= removeCount;
       }
       i += 1;
+      sheetCounter += 1;
     }
 
-    // input total & label
-    worksheet.getCell(`A${rowCount + 5}`).value = CASH;
-    worksheet.getCell(`A${rowCount + 6}`).value = QR;
-    worksheet.getCell(`A${rowCount + 7}`).value = DEBIT;
-    worksheet.getCell(`A${rowCount + 8}`).value = GOFOOD;
-    worksheet.getCell(`A${rowCount + 9}`).value = "TOTAL";
-    worksheet.getCell(`B${rowCount + 5}`).value = `Rp ${cash}`;
-    worksheet.getCell(`B${rowCount + 6}`).value = `Rp ${qrPayment}`;
-    worksheet.getCell(`B${rowCount + 7}`).value = `Rp ${debitCard}`;
-    worksheet.getCell(`B${rowCount + 8}`).value = `Rp ${gofood}`;
-    worksheet.getCell(`B${rowCount + 9}`).value = `Rp ${
-      cash + qrPayment + debitCard + gofood
-    }`;
+    if (newWorksheet) {
+      const lastRow = newWorksheet.actualRowCount + 4;
+      // input total & label
+      newWorksheet.getCell(`A${lastRow + 5}`).value = CASH;
+      newWorksheet.getCell(`A${lastRow + 6}`).value = QR;
+      newWorksheet.getCell(`A${lastRow + 7}`).value = DEBIT;
+      newWorksheet.getCell(`A${lastRow + 8}`).value = GOFOOD;
+      newWorksheet.getCell(`A${lastRow + 9}`).value = "TOTAL";
+      newWorksheet.getCell(`B${lastRow + 5}`).value = `Rp ${cash}`;
+      newWorksheet.getCell(`B${lastRow + 6}`).value = `Rp ${qrPayment}`;
+      newWorksheet.getCell(`B${lastRow + 7}`).value = `Rp ${debitCard}`;
+      newWorksheet.getCell(`B${lastRow + 8}`).value = `Rp ${gofood}`;
+      newWorksheet.getCell(`B${lastRow + 9}`).value = `Rp ${
+        cash + qrPayment + debitCard + gofood
+      }`;
+    }
 
     return workbook.xlsx.writeBuffer();
   } catch (error) {
