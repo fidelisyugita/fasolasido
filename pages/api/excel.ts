@@ -8,9 +8,9 @@ import { modify } from "lib/utils";
 export type Excel = any;
 
 async function excelRoute(req: NextApiRequest, res: NextApiResponse<Excel>) {
-  const { excelBase64, percentage } = req.body;
+  const { excelBase64, percentage, lastOrderNo } = req.body;
 
-  const excelBuffer = await modify(excelBase64, percentage);
+  const excelBuffer = await modify(excelBase64, percentage, lastOrderNo);
   // const response = await axios.post(
   //   "http://127.0.0.1:5001/fasolasidon/asia-southeast2/excel/generate",
   //   { excelBase64, percentage, lastOrderNo },

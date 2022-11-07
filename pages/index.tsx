@@ -17,22 +17,25 @@ export default function Home({
   user,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const [errorMsg, setErrorMsg] = useState("");
+  const [isLoading, setLoading] = useState(false);
 
   return (
     <Layout>
       <div className="home">
         <Form
           errorMessage={errorMsg}
+          isLoading={isLoading}
           onSubmit={async function handleSubmit(event) {
             event.preventDefault();
             setErrorMsg("");
+            setLoading(true);
 
             // console.log(event.currentTarget["file-input"].files[0]);
 
             const body = {
               excelBase64: event.currentTarget["file-input"].files[0],
               percentage: event.currentTarget?.percentage?.value,
-              // lastOrderNo: event.currentTarget?.lastOrderNo?.value,
+              lastOrderNo: event.currentTarget?.lastOrderNo?.value,
             };
 
             try {
@@ -69,6 +72,7 @@ export default function Home({
                 //     body: JSON.stringify(body),
                 //   }
                 // );
+                setLoading(false);
               });
             } catch (error) {
               if (error instanceof FetchError) {
@@ -76,6 +80,7 @@ export default function Home({
               } else {
                 console.error("An unexpected error happened:", error);
               }
+              setLoading(false);
             }
           }}
         />

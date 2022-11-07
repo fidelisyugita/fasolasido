@@ -5,9 +5,11 @@ import fetchJson from "lib/fetchJson";
 
 export default function Form({
   errorMessage,
+  isLoading,
   onSubmit,
 }: {
   errorMessage: string;
+  isLoading: boolean;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
 }) {
   const { user, mutateUser } = useUser();
@@ -83,10 +85,21 @@ export default function Form({
 
                   <div className="text-center mt-6">
                     <button
-                      className="bg-blueGray-800 text-white active:bg-blueGray-600 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full ease-linear transition-all duration-150"
+                      className="animate-shake bg-blueGray-800 text-white active:bg-blueGray-600 text-sm font-bold uppercase px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 w-full ease-linear transition-all duration-150"
                       type="submit"
+                      disabled={isLoading}
                     >
-                      Generate
+                      {isLoading ? (
+                        <>
+                          {/* <svg
+                            className="animate-spin h-5 w-5 mr-3 ..."
+                            viewBox="0 0 24 24"
+                          ></svg> */}
+                          Processing...
+                        </>
+                      ) : (
+                        "Generate"
+                      )}
                     </button>
                     {errorMessage && <p className="error">{errorMessage}</p>}
                   </div>
@@ -96,27 +109,6 @@ export default function Form({
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        form,
-        label {
-          display: flex;
-          flex-flow: column;
-        }
-        label > span {
-          font-weight: 600;
-        }
-        input {
-          padding: 8px;
-          margin: 0.3rem 0 1rem;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-        }
-        .error {
-          color: brown;
-          margin: 1rem 0 0;
-        }
-      `}</style>
     </>
   );
 }

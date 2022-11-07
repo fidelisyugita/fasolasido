@@ -42,9 +42,14 @@ export function transformBody(body: any, callback: any) {
   };
 }
 
-export async function modify(base64: string, percentage = 50) {
+export async function modify(
+  base64: string,
+  percentage: number,
+  lastOrderNo: string
+) {
   if (!percentage) percentage = 50;
   console.log("percentage: ", percentage);
+  console.log("lastOrderNo: ", lastOrderNo);
 
   const workbook = new Excel.Workbook();
 
@@ -79,7 +84,7 @@ export async function modify(base64: string, percentage = 50) {
       removeEvery = parseInt(String(percentage / (100 - percentage)));
     }
 
-    let seqOrderNo = 0;
+    let seqOrderNo = Number(lastOrderNo || 0);
     let newWorksheet;
 
     let cash = 0;
