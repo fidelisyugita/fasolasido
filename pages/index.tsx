@@ -38,10 +38,8 @@ export default function Home({
               lastOrderNo: event.currentTarget?.lastOrderNo?.value,
             };
 
-            try {
-              transformBody(body, async (reqBody: any) => {
-                // console.log("reqBody: ", reqBody);
-
+            transformBody(body, async (reqBody: any) => {
+              try {
                 const res = await axios.post("/api/excel", reqBody, {
                   responseType: "arraybuffer",
                   headers: {
@@ -73,15 +71,15 @@ export default function Home({
                 //   }
                 // );
                 setLoading(false);
-              });
-            } catch (error) {
-              if (error instanceof FetchError) {
-                setErrorMsg(error.data.message);
-              } else {
-                console.error("An unexpected error happened:", error);
+              } catch (error) {
+                if (error instanceof FetchError) {
+                  setErrorMsg(error.data.message);
+                } else {
+                  console.error("An unexpected error happened:", error);
+                }
+                setLoading(false);
               }
-              setLoading(false);
-            }
+            });
           }}
         />
       </div>
