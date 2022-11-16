@@ -38,6 +38,12 @@ export default function Home({
               lastOrderNo: event.currentTarget?.lastOrderNo?.value,
             };
 
+            if (body.excelBase64.size > 300 * 1024) {
+              setErrorMsg("File should be less than 300KB 🥲");
+              setLoading(false);
+              return;
+            }
+
             transformBody(body, async (reqBody: any) => {
               try {
                 const res = await axios.post("/api/excel", reqBody, {

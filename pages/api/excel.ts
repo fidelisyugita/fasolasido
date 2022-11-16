@@ -12,7 +12,7 @@ async function excelRoute(req: NextApiRequest, res: NextApiResponse<Excel>) {
 
   const excelBuffer = await modify(excelBase64, percentage, lastOrderNo);
   // const response = await axios.post(
-  //   "http://127.0.0.1:5001/fasolasidon/asia-southeast2/excel/generate",
+  //   "https://asia-southeast2-fasolasidon.cloudfunctions.net/excel/generate",
   //   { excelBase64, percentage, lastOrderNo },
   //   {
   //     method: "POST",
