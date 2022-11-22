@@ -4,7 +4,7 @@ import moment from "moment";
 
 const CASH = "CASH";
 const QR = "QR";
-const DEBIT = "Kartu Debit";
+const DEBIT = "Kartu Debit"; // Bank Transfer
 const GOFOOD = "GoFOOD";
 
 export function addDay(date: string, amount = 1, format = "YYMMDD") {
@@ -80,6 +80,29 @@ export async function modify(
     worksheet.spliceColumns(9, 9);
 
     /**
+     * remove unnecessary row
+     * minus value
+     */
+    let actualLastRow = worksheet.actualRowCount;
+    let sliceCounter = 0;
+    console.log(
+      "(`G${actualLastRow}`).value: ",
+      worksheet.getCell(`G${actualLastRow}`).value
+    );
+    while (Number(worksheet.getCell(`G${actualLastRow}`).value) < 0) {
+      actualLastRow -= 1;
+      sliceCounter += 1;
+
+      console.log(
+        "(`G${actualLastRow}`).value: ",
+        worksheet.getCell(`G${actualLastRow}`).value
+      );
+
+      console.log("sliceCounter: ", sliceCounter);
+    }
+    worksheet.spliceRows(actualLastRow - 1, sliceCounter);
+
+    /**
      * prepare compression
      */
     let removeCount = 1; // in row
@@ -139,7 +162,9 @@ export async function modify(
           gofood = 0;
         }
 
-        newWorksheet = workbook.addWorksheet(getDateFromOrderNo(orderNo)); // set new sheet
+        console.log("newWorksheet orderDate: ", orderDate);
+
+        newWorksheet = workbook.addWorksheet(orderDate); // set new sheet
         sheetCounter = 6; // first cell in sheet
 
         /**
@@ -212,30 +237,36 @@ export async function modify(
       row.getCell(1).value = `${prefixOrderNo}${suffixOrderNo}`; // modify order no
       row.commit();
 
-      anotherRow.getCell(1).value = row.getCell(2).value; // swap order no
-      anotherRow.getCell(2).value = row.getCell(1).value; // to order time
-      anotherRow.getCell(3).value = row.getCell(3).value;
-      anotherRow.getCell(4).value = row.getCell(4).value;
-      anotherRow.getCell(5).value = row.getCell(5).value;
-      anotherRow.getCell(6).value = moneyFormat(Number(row.getCell(6).value));
-      anotherRow.getCell(7).value = moneyFormat(Number(row.getCell(7).value));
-      anotherRow.getCell(8).value = row.getCell(8).value;
-      anotherRow.commit();
+      if (!String(row.getCell(4).value).includes("Ongkir")) {
+        const payment = row.getCell(8).value;
+        anotherRow.getCell(1).value = row.getCell(2).value; // swap order no
+        anotherRow.getCell(2).value = row.getCell(1).value; // to order time
+        anotherRow.getCell(3).value = row.getCell(3).value;
+        anotherRow.getCell(4).value = row.getCell(4).value;
+        anotherRow.getCell(5).value = row.getCell(5).value;
+        anotherRow.getCell(6).value = moneyFormat(Number(row.getCell(6).value));
+        anotherRow.getCell(7).value = moneyFormat(Number(row.getCell(7).value));
+        anotherRow.getCell(8).value = String(payment).includes("Transfer")
+          ? DEBIT
+          : payment;
 
-      // count by payment type
-      switch (String(row.getCell(8))) {
-        case QR:
-          qrPayment += Number(row.getCell(7));
-          break;
-        case GOFOOD:
-          gofood += Number(row.getCell(7));
-          break;
-        case DEBIT:
-          debitCard += Number(row.getCell(7));
-          break;
-        default:
-          cash += Number(row.getCell(7));
-          break;
+        anotherRow.commit();
+
+        // count by payment type
+        switch (String(row.getCell(8))) {
+          case CASH:
+            cash += Number(row.getCell(7));
+            break;
+          case QR:
+            qrPayment += Number(row.getCell(7));
+            break;
+          case GOFOOD:
+            gofood += Number(row.getCell(7));
+            break;
+          default:
+            debitCard += Number(row.getCell(7));
+            break;
+        }
       }
 
       // remove unnecessary row
