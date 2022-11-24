@@ -84,23 +84,9 @@ export async function modify(
      * minus value
      */
     let actualLastRow = worksheet.actualRowCount;
-    let sliceCounter = 0;
-    console.log(
-      "(`G${actualLastRow}`).value: ",
-      worksheet.getCell(`G${actualLastRow}`).value
-    );
     while (Number(worksheet.getCell(`G${actualLastRow}`).value) < 0) {
       actualLastRow -= 1;
-      sliceCounter += 1;
-
-      console.log(
-        "(`G${actualLastRow}`).value: ",
-        worksheet.getCell(`G${actualLastRow}`).value
-      );
-
-      console.log("sliceCounter: ", sliceCounter);
     }
-    worksheet.spliceRows(actualLastRow - 1, sliceCounter);
 
     /**
      * prepare compression
@@ -122,9 +108,13 @@ export async function modify(
     let qrPayment = 0;
     let debitCard = 0;
     let gofood = 0;
-    let rowCount = worksheet.actualRowCount;
+    let rowCount = actualLastRow;
+    console.log(
+      `LAST (G${rowCount}).value: `,
+      worksheet.getCell(`G${rowCount}`).value
+    );
     let i = 1;
-    let sheetCounter = 8; // first cell in sheet
+    let sheetCounter = 6; // first cell in sheet
     while (i < rowCount) {
       const prevRow = worksheet.getRow(i);
       const row = worksheet.getRow(i + 1);
