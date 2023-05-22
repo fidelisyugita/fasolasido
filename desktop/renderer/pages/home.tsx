@@ -7,7 +7,7 @@ import { transformBody, generateExcel } from "../lib/utils";
 function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setLoading] = useState(false);
-  
+
   return (
     <React.Fragment>
       <Layout>
@@ -36,7 +36,7 @@ function Home() {
 
               transformBody(body, async (reqBody: any) => {
                 try {
-                  const res = await generateExcel(reqBody)
+                  const res: any = await generateExcel(reqBody);
                   // axios.post("/api/excel", reqBody, {
                   //   responseType: "arraybuffer",
                   //   headers: {
@@ -56,7 +56,7 @@ function Home() {
 
                   setLoading(false);
                 } catch (error) {
-                    console.error("An unexpected error happened:", error);
+                  console.error("An unexpected error happened:", error);
                   setLoading(false);
                 }
               });
