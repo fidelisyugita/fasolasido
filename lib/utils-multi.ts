@@ -55,7 +55,7 @@ export async function modify(base64: string, percentage: number) {
     let newWorksheet;
 
     let total = 0;
-    let rowCount = worksheet.rowCount;
+    let rowCount = worksheet.actualRowCount;
     let i = 1;
     let sheetCounter = 4; // first cell in sheet
     while (i < rowCount) {
@@ -69,57 +69,55 @@ export async function modify(base64: string, percentage: number) {
 
       if (!newWorksheet || txDate != formatDate(prevTxTime)) {
         if (newWorksheet) {
-          const lastRow = newWorksheet.rowCount;
+          const lastRow = newWorksheet.actualRowCount - 1;
           // input total & label
-          newWorksheet.getCell(`B${lastRow + 1}`).value = "T O T A L";
-          newWorksheet.getCell(`C${lastRow + 1}`).value = total;
-          newWorksheet.getRow(lastRow + 1).font = { bold: true };
+          newWorksheet.getCell(`B${lastRow + 3}`).value = "T O T A L";
+          newWorksheet.getCell(`C${lastRow + 3}`).value = total;
+          newWorksheet.getRow(lastRow + 3).font = { bold: true };
 
           total = 0;
-        } else {
-          newWorksheet = workbook.addWorksheet(txDate); // set new sheet
-          // sheetCounter = 4; // first cell in sheet
-
-          /**
-           * setup width
-           */
-          newWorksheet.columns = [
-            { width: 14 },
-            { width: 34 },
-            { width: 14, style: { numFmt: '"Rp "#,###' } },
-            { width: 16, style: { numFmt: "D MMM\\ h:mm\\ AM/PM" } },
-            { width: 8 },
-          ];
         }
+
+        newWorksheet = workbook.addWorksheet(txDate); // set new sheet
+        sheetCounter = 4; // first cell in sheet
+
+        /**
+         * setup width
+         */
+        newWorksheet.columns = [
+          { width: 14 },
+          { width: 34 },
+          { width: 14, style: { numFmt: '"Rp "#,###' } },
+          { width: 16, style: { numFmt: "D MMM\\ h:mm\\ AM/PM" } },
+          { width: 8 },
+        ];
+
         /**
          * setup header
          * START
          */
-        const lastRow = newWorksheet.rowCount;
-        newWorksheet.mergeCells(`A${lastRow + 5}`, `E${lastRow + 6}`);
-        newWorksheet.getRow(lastRow + 5).font = { bold: true, size: 12 };
-        newWorksheet.getRow(lastRow + 5).alignment = {
+        newWorksheet.mergeCells("A1", "E2");
+        newWorksheet.getRow(1).font = { bold: true, size: 12 };
+        newWorksheet.getRow(1).alignment = {
           vertical: "middle",
           horizontal: "center",
         };
-        newWorksheet.getCell(`A${lastRow + 5}`).value = getHeader(txDate);
+        newWorksheet.getCell(`A1`).value = getHeader(txDate);
 
-        newWorksheet.getRow(lastRow + 7).font = { bold: true };
-        newWorksheet.getRow(lastRow + 7).alignment = {
+        newWorksheet.getRow(3).font = { bold: true };
+        newWorksheet.getRow(3).alignment = {
           vertical: "middle",
           horizontal: "center",
         };
-        newWorksheet.getCell(`A${lastRow + 7}`).value = "Outlet";
-        newWorksheet.getCell(`B${lastRow + 7}`).value = "Transaction ID";
-        newWorksheet.getCell(`C${lastRow + 7}`).value = "Amount";
-        newWorksheet.getCell(`D${lastRow + 7}`).value = "Time";
-        newWorksheet.getCell(`E${lastRow + 7}`).value = "Payment";
+        newWorksheet.getCell(`A3`).value = "Outlet";
+        newWorksheet.getCell(`B3`).value = "Transaction ID";
+        newWorksheet.getCell(`C3`).value = "Amount";
+        newWorksheet.getCell(`D3`).value = "Time";
+        newWorksheet.getCell(`E3`).value = "Payment";
         /**
          * setup header
          * END
          */
-
-        sheetCounter += 8;
       }
       const anotherRow = newWorksheet?.getRow(sheetCounter);
 
@@ -145,11 +143,11 @@ export async function modify(base64: string, percentage: number) {
     }
 
     if (newWorksheet) {
-      const lastRow = newWorksheet.rowCount;
+      const lastRow = newWorksheet.actualRowCount - 1;
       // input total & label
-      newWorksheet.getCell(`B${lastRow + 1}`).value = "T O T A L";
-      newWorksheet.getCell(`C${lastRow + 1}`).value = total;
-      newWorksheet.getRow(lastRow + 1).font = { bold: true };
+      newWorksheet.getCell(`B${lastRow + 3}`).value = "T O T A L";
+      newWorksheet.getCell(`C${lastRow + 3}`).value = total;
+      newWorksheet.getRow(lastRow + 3).font = { bold: true };
     }
 
     return workbook.xlsx.writeBuffer();

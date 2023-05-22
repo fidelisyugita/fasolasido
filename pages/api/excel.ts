@@ -8,9 +8,9 @@ import { modify } from "lib/utils";
 export type Excel = any;
 
 async function excelRoute(req: NextApiRequest, res: NextApiResponse<Excel>) {
-  const { excelBase64, percentage, lastOrderNo } = req.body;
+  const { excelBase64, percentage } = req.body;
 
-  const excelBuffer = await modify(excelBase64, percentage, lastOrderNo);
+  const excelBuffer = await modify(excelBase64, percentage);
   // const response = await axios.post(
   //   "https://asia-southeast2-fasolasidon.cloudfunctions.net/excel/generate",
   //   { excelBase64, percentage, lastOrderNo },
