@@ -4,7 +4,10 @@ import moment from "moment";
 
 const CASH = "CASH";
 const QR = "QR";
-const DEBIT = "Kartu Debit"; // Bank Transfer
+const DEBIT = "Kartu Debit";
+const DEBITBCA = "Debit BCA";
+const DEBITMANDIRI = "Debit Mandiri";
+const DEBITBRI = "Debit BRI";
 const GOFOOD = "GoFOOD";
 
 export function addDay(date: string, amount = 1, format = "YYMMDD") {
@@ -76,7 +79,7 @@ export async function modify(
     worksheet.spliceColumns(5, 3);
     worksheet.spliceColumns(6, 2);
     worksheet.spliceColumns(7, 3);
-    worksheet.spliceColumns(8, 10);
+    worksheet.spliceColumns(8, 12);
     worksheet.spliceColumns(9, 9);
 
     /**
@@ -107,6 +110,9 @@ export async function modify(
     let cash = 0;
     let qrPayment = 0;
     let debitCard = 0;
+    let debitBca = 0;
+    let debitMandiri = 0;
+    let debitBri = 0;
     let gofood = 0;
     let rowCount = actualLastRow;
     console.log(
@@ -130,25 +136,42 @@ export async function modify(
           newWorksheet.getCell(`A${lastRow + 5}`).value = CASH;
           newWorksheet.getCell(`A${lastRow + 6}`).value = QR;
           newWorksheet.getCell(`A${lastRow + 7}`).value = DEBIT;
-          newWorksheet.getCell(`A${lastRow + 8}`).value = GOFOOD;
-          newWorksheet.getCell(`A${lastRow + 9}`).value = "T O T A L";
+          newWorksheet.getCell(`A${lastRow + 8}`).value = DEBITBCA;
+          newWorksheet.getCell(`A${lastRow + 9}`).value = DEBITMANDIRI;
+          newWorksheet.getCell(`A${lastRow + 10}`).value = DEBITBRI;
+          newWorksheet.getCell(`A${lastRow + 11}`).value = GOFOOD;
+          newWorksheet.getCell(`A${lastRow + 12}`).value = "T O T A L";
           newWorksheet.getCell(`B${lastRow + 5}`).value = moneyFormat(cash);
           newWorksheet.getCell(`B${lastRow + 6}`).value =
             moneyFormat(qrPayment);
           newWorksheet.getCell(`B${lastRow + 7}`).value =
             moneyFormat(debitCard);
-          newWorksheet.getCell(`B${lastRow + 8}`).value = moneyFormat(gofood);
-          newWorksheet.getCell(`B${lastRow + 9}`).value = moneyFormat(
-            cash + qrPayment + debitCard + gofood
+          newWorksheet.getCell(`B${lastRow + 8}`).value = moneyFormat(debitBca);
+          newWorksheet.getCell(`B${lastRow + 9}`).value =
+            moneyFormat(debitMandiri);
+          newWorksheet.getCell(`B${lastRow + 10}`).value =
+            moneyFormat(debitBri);
+          newWorksheet.getCell(`B${lastRow + 11}`).value = moneyFormat(gofood);
+          newWorksheet.getCell(`B${lastRow + 12}`).value = moneyFormat(
+            cash +
+              qrPayment +
+              debitCard +
+              debitBca +
+              debitMandiri +
+              debitBri +
+              gofood
           );
-          newWorksheet.getCell(`A${lastRow + 9}`).alignment = {
+          newWorksheet.getCell(`A${lastRow + 12}`).alignment = {
             horizontal: "right",
           };
-          newWorksheet.getRow(lastRow + 9).font = { bold: true };
+          newWorksheet.getRow(lastRow + 12).font = { bold: true };
 
           cash = 0;
           qrPayment = 0;
           debitCard = 0;
+          debitBca = 0;
+          debitMandiri = 0;
+          debitBri = 0;
           gofood = 0;
         }
 
@@ -227,6 +250,15 @@ export async function modify(
       row.getCell(1).value = `${prefixOrderNo}${suffixOrderNo}`; // modify order no
       row.commit();
 
+      // QR check
+      row.getCell(8).value = row
+        .getCell(8)
+        .value?.toString()
+        .toLowerCase()
+        .includes("qr")
+        ? QR
+        : row.getCell(8).value;
+
       if (!String(row.getCell(4).value).includes("Ongkir")) {
         const payment = row.getCell(8).value;
         anotherRow.getCell(1).value = row.getCell(2).value; // swap order no
@@ -244,17 +276,26 @@ export async function modify(
 
         // count by payment type
         switch (String(row.getCell(8))) {
-          case CASH:
-            cash += Number(row.getCell(7));
-            break;
           case QR:
             qrPayment += Number(row.getCell(7));
             break;
           case GOFOOD:
             gofood += Number(row.getCell(7));
             break;
-          default:
+          case DEBIT:
             debitCard += Number(row.getCell(7));
+            break;
+          case DEBITBCA:
+            debitBca += Number(row.getCell(7));
+            break;
+          case DEBITMANDIRI:
+            debitMandiri += Number(row.getCell(7));
+            break;
+          case DEBITBRI:
+            debitBri += Number(row.getCell(7));
+            break;
+          default:
+            cash += Number(row.getCell(7));
             break;
         }
       }
@@ -274,19 +315,31 @@ export async function modify(
       newWorksheet.getCell(`A${lastRow + 5}`).value = CASH;
       newWorksheet.getCell(`A${lastRow + 6}`).value = QR;
       newWorksheet.getCell(`A${lastRow + 7}`).value = DEBIT;
-      newWorksheet.getCell(`A${lastRow + 8}`).value = GOFOOD;
-      newWorksheet.getCell(`A${lastRow + 9}`).value = "T O T A L";
+      newWorksheet.getCell(`A${lastRow + 8}`).value = DEBITBCA;
+      newWorksheet.getCell(`A${lastRow + 9}`).value = DEBITMANDIRI;
+      newWorksheet.getCell(`A${lastRow + 10}`).value = DEBITBRI;
+      newWorksheet.getCell(`A${lastRow + 11}`).value = GOFOOD;
+      newWorksheet.getCell(`A${lastRow + 12}`).value = "T O T A L";
       newWorksheet.getCell(`B${lastRow + 5}`).value = moneyFormat(cash);
       newWorksheet.getCell(`B${lastRow + 6}`).value = moneyFormat(qrPayment);
       newWorksheet.getCell(`B${lastRow + 7}`).value = moneyFormat(debitCard);
-      newWorksheet.getCell(`B${lastRow + 8}`).value = moneyFormat(gofood);
-      newWorksheet.getCell(`B${lastRow + 9}`).value = moneyFormat(
-        cash + qrPayment + debitCard + gofood
+      newWorksheet.getCell(`B${lastRow + 8}`).value = moneyFormat(debitBca);
+      newWorksheet.getCell(`B${lastRow + 9}`).value = moneyFormat(debitMandiri);
+      newWorksheet.getCell(`B${lastRow + 10}`).value = moneyFormat(debitBri);
+      newWorksheet.getCell(`B${lastRow + 11}`).value = moneyFormat(gofood);
+      newWorksheet.getCell(`B${lastRow + 12}`).value = moneyFormat(
+        cash +
+          qrPayment +
+          debitCard +
+          debitBca +
+          debitMandiri +
+          debitBri +
+          gofood
       );
-      newWorksheet.getCell(`A${lastRow + 9}`).alignment = {
+      newWorksheet.getCell(`A${lastRow + 12}`).alignment = {
         horizontal: "right",
       };
-      newWorksheet.getRow(lastRow + 9).font = { bold: true };
+      newWorksheet.getRow(lastRow + 12).font = { bold: true };
     }
 
     return workbook.xlsx.writeBuffer();
