@@ -7,7 +7,7 @@ import { transformBody, generateExcel } from "../lib/utils";
 function Home() {
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setLoading] = useState(false);
-  
+
   return (
     <React.Fragment>
       <Layout>
@@ -23,6 +23,7 @@ function Home() {
               // console.log(event.currentTarget["file-input"].files[0]);
 
               const body = {
+                placeName: event.currentTarget?.placeName?.value,
                 excelBase64: event.currentTarget["file-input"].files[0],
                 percentage: event.currentTarget?.percentage?.value,
                 lastOrderNo: event.currentTarget?.lastOrderNo?.value,
@@ -36,7 +37,7 @@ function Home() {
 
               transformBody(body, async (reqBody: any) => {
                 try {
-                  const res = await generateExcel(reqBody)
+                  const res = await generateExcel(reqBody);
                   // axios.post("/api/excel", reqBody, {
                   //   responseType: "arraybuffer",
                   //   headers: {
@@ -56,7 +57,7 @@ function Home() {
 
                   setLoading(false);
                 } catch (error) {
-                    console.error("An unexpected error happened:", error);
+                  console.error("An unexpected error happened:", error);
                   setLoading(false);
                 }
               });

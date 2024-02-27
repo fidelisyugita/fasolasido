@@ -28,9 +28,14 @@ export function getDateFromOrderNo(orderNo: string, format = "YYMMDD") {
   return moment().format(format);
 }
 
-export function getHeader(date: string, format = "ddd_YYMMDD") {
+export function getHeader(
+  placeName: string,
+  date: string,
+  format = "ddd_YYMMDD"
+) {
+  if (isNil(placeName) || isEmpty(placeName)) placeName = "KOHVI_BELITUNG";
   if (isNil(date) || isEmpty(date)) null;
-  return `KOHVI_BELITUNG_${moment(date, "YYMMDD").format(format)}`;
+  return `${placeName}_${moment(date, "YYMMDD").format(format)}`;
 }
 
 export function transformBody(body: any, callback: any) {
@@ -46,9 +51,14 @@ export function transformBody(body: any, callback: any) {
 }
 
 export async function generateExcel(body: any) {
-  const { excelBase64, percentage, lastOrderNo } = body;
+  const { excelBase64, percentage, lastOrderNo, placeName } = body;
 
-  const excelBuffer = await modify(excelBase64, percentage, lastOrderNo);
+  const excelBuffer = await modify(
+    excelBase64,
+    percentage,
+    lastOrderNo,
+    placeName
+  );
 
   return excelBuffer;
 }
@@ -56,11 +66,13 @@ export async function generateExcel(body: any) {
 export async function modify(
   base64: string,
   percentage: number,
-  lastOrderNo: string
+  lastOrderNo: string,
+  placeName: string
 ) {
   if (!percentage) percentage = 50;
   console.log("percentage: ", percentage);
   console.log("lastOrderNo: ", lastOrderNo);
+  console.log("placeName: ", placeName);
 
   const workbook = new Excel.Workbook();
 
@@ -210,7 +222,7 @@ export async function modify(
           vertical: "middle",
           horizontal: "center",
         };
-        newWorksheet.getCell(`A1`).value = getHeader(orderDate);
+        newWorksheet.getCell(`A1`).value = getHeader(placeName, orderDate);
 
         newWorksheet.mergeCells("A4", "A5");
         newWorksheet.mergeCells("B4", "B5");
